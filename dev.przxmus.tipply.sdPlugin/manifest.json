@@ -47,6 +47,12 @@
 			"States": [
 				{
 					"Image": "imgs/actions/counter/key",
+					"Title": "Alerts",
+					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/counter/key",
+					"Title": "Alerts",
 					"TitleAlignment": "middle"
 				}
 			]
@@ -63,6 +69,12 @@
 			"States": [
 				{
 					"Image": "imgs/actions/counter/key",
+					"Title": "Sound",
+					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/counter/key",
+					"Title": "Sound",
 					"TitleAlignment": "middle"
 				}
 			]
@@ -79,6 +91,12 @@
 			"States": [
 				{
 					"Image": "imgs/actions/counter/key",
+					"Title": "Mod",
+					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/counter/key",
+					"Title": "Mod",
 					"TitleAlignment": "middle"
 				}
 			]

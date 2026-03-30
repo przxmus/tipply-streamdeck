@@ -99,17 +99,17 @@ export async function toggleSetting(
 	return client.me.get();
 }
 
-export function getToggleButtonTitle(
+export function getToggleState(
 	action: TipplyToggleAction,
 	currentUser: CurrentUser,
-): string {
+): 0 | 1 {
 	switch (action) {
 		case "alerts":
-			return currentUser.widgetAlertsDisabled ? "Alerts Off" : "Alerts On";
+			return currentUser.widgetAlertsDisabled ? 0 : 1;
 		case "alertSound":
-			return currentUser.widgetAlertsSoundDisabled ? "Sound Off" : "Sound On";
+			return currentUser.widgetAlertsSoundDisabled ? 0 : 1;
 		case "moderatorMode":
-			return currentUser.moderationMode ? "Mod On" : "Mod Off";
+			return currentUser.moderationMode ? 1 : 0;
 	}
 }
 

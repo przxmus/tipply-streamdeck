@@ -16,7 +16,7 @@ import {
 	type TipplyGlobalSettings,
 	type TipplyToggleAction,
 	getCurrentUser,
-	getToggleButtonTitle,
+	getToggleState,
 	resendLatestTip,
 	skipCurrentTip,
 	toggleSetting,
@@ -70,9 +70,8 @@ abstract class TipplyActionBase extends SingletonAction {
 				await ev.action.setTitle(this.defaultButtonTitle);
 			} else {
 				const currentUser = await toggleSetting(authCookie, this.actionType);
-				await ev.action.setTitle(
-					getToggleButtonTitle(this.actionType, currentUser),
-				);
+				await ev.action.setTitle(this.defaultButtonTitle);
+				await ev.action.setState(getToggleState(this.actionType, currentUser));
 			}
 
 			await ev.action.showOk();
@@ -178,7 +177,10 @@ abstract class TipplyActionBase extends SingletonAction {
 
 		try {
 			const currentUser = await getCurrentUser(authCookie);
-			await action.setTitle(getToggleButtonTitle(this.actionType, currentUser));
+			await action.setTitle(this.defaultButtonTitle);
+			if (this.isKeyAction(action)) {
+				await action.setState(getToggleState(this.actionType, currentUser));
+			}
 		} catch (error) {
 			streamDeck.logger.warn(
 				`Failed to sync title for Tipply ${this.actionType} action`,
@@ -186,6 +188,10 @@ abstract class TipplyActionBase extends SingletonAction {
 			);
 			await action.setTitle(this.defaultButtonTitle);
 		}
+	}
+
+	private isKeyAction(action: KeyAction | WillAppearEvent["action"]): action is KeyAction {
+		return "setState" in action;
 	}
 }
 

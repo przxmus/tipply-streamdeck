@@ -1,8 +1,6 @@
 const elements = {
 	authCookie: document.getElementById("auth-cookie"),
 	connectionTitle: document.getElementById("connection-title"),
-	connectionDescription: document.getElementById("connection-description"),
-	connectionMeta: document.getElementById("connection-meta"),
 };
 
 let submitTimer;
@@ -67,29 +65,15 @@ function renderState(state) {
 	switch (state.status) {
 		case "connected":
 			elements.connectionTitle.textContent = `Connected as ${state.account.username}`;
-			elements.connectionDescription.textContent =
-				"Tipply token is stored securely and reused across plugin restarts.";
-			elements.connectionMeta.textContent = state.connectedAt
-				? `Authorized at ${formatDate(state.connectedAt)}`
-				: "";
 			break;
 		case "error":
 			elements.connectionTitle.textContent = "Authorization failed";
-			elements.connectionDescription.textContent =
-				state.message ?? "Tipply connection could not be established.";
-			elements.connectionMeta.textContent = "";
 			break;
 		case "pending":
 			elements.connectionTitle.textContent = "Connecting to Tipply";
-			elements.connectionDescription.textContent =
-				state.message ?? "Waiting for Tipply validation.";
-			elements.connectionMeta.textContent = "";
 			break;
 		default:
 			elements.connectionTitle.textContent = "Tipply is not connected";
-			elements.connectionDescription.textContent =
-				state.message ?? "Paste an auth_token cookie to authorize this plugin.";
-			elements.connectionMeta.textContent = "";
 			break;
 	}
 }
@@ -121,17 +105,6 @@ async function submitToken() {
 		type: "set-auth-cookie",
 		authCookie,
 	});
-}
-
-function formatDate(value) {
-	try {
-		return new Intl.DateTimeFormat(undefined, {
-			dateStyle: "medium",
-			timeStyle: "short",
-		}).format(new Date(value));
-	} catch {
-		return value;
-	}
 }
 
 function setBusy(value) {
