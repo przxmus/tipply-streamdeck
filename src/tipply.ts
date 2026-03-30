@@ -1,4 +1,5 @@
 import {
+	type CurrentUser,
 	createTipplyClient,
 	type Tip,
 } from "tipply-sdk-ts";
@@ -26,6 +27,11 @@ export type PropertyInspectorStateMessage = {
 	connectedAt?: string;
 	message?: string;
 };
+
+export type TipplyToggleAction =
+	| "alerts"
+	| "alertSound"
+	| "moderatorMode";
 
 export function createAuthenticatedClient(authCookie: string) {
 	return createTipplyClient({
@@ -65,6 +71,46 @@ export async function resendLatestTip(authCookie: string): Promise<Tip> {
 
 export async function skipCurrentTip(authCookie: string): Promise<void> {
 	await createAuthenticatedClient(authCookie).tipAlerts.skipCurrent();
+}
+
+export async function getCurrentUser(authCookie: string): Promise<CurrentUser> {
+	return createAuthenticatedClient(authCookie).me.get();
+}
+
+export async function toggleSetting(
+	authCookie: string,
+	action: TipplyToggleAction,
+): Promise<CurrentUser> {
+	const client = createAuthenticatedClient(authCookie);
+	const currentUser = await client.me.get();
+
+	switch (action) {
+		case "alerts":
+			await client.settings.alerts.toggle(!currentUser.widgetAlertsDisabled);
+			break;
+		case "alertSound":
+			await client.settings.alertSound.toggle(!currentUser.widgetAlertsSoundDisabled);
+			break;
+		case "moderatorMode":
+			await client.moderators.mode.toggle();
+			break;
+	}
+
+	return client.me.get();
+}
+
+export function getToggleButtonTitle(
+	action: TipplyToggleAction,
+	currentUser: CurrentUser,
+): string {
+	switch (action) {
+		case "alerts":
+			return currentUser.widgetAlertsDisabled ? "Alerts Off" : "Alerts On";
+		case "alertSound":
+			return currentUser.widgetAlertsSoundDisabled ? "Sound Off" : "Sound On";
+		case "moderatorMode":
+			return currentUser.moderationMode ? "Mod On" : "Mod Off";
+	}
 }
 
 function getLatestTip(tips: Tip[]): Tip | undefined {

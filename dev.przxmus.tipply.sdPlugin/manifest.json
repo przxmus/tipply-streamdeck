@@ -1,10 +1,10 @@
 {
-	"Name": "tipply",
+	"Name": "Tipply",
 	"Version": "0.1.0.0",
 	"Author": "przxmus",
 	"Actions": [
 		{
-			"Name": "Resend Donate",
+			"Name": "Resend Last Donate",
 			"UUID": "dev.przxmus.tipply.resend",
 			"Icon": "imgs/actions/counter/icon",
 			"Tooltip": "Resend the last donation on Tipply.",
@@ -34,9 +34,57 @@
 					"TitleAlignment": "middle"
 				}
 			]
+		},
+		{
+			"Name": "Toggle Alerts",
+			"UUID": "dev.przxmus.tipply.alerts",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Toggle Tipply alerts on or off.",
+			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Toggle Alert Sound",
+			"UUID": "dev.przxmus.tipply.alert-sound",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Toggle Tipply alert sound on or off.",
+			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Toggle Moderator Mode",
+			"UUID": "dev.przxmus.tipply.moderator-mode",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Toggle Tipply moderator mode.",
+			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
 		}
 	],
-	"Category": "tipply",
+	"Category": "Tipply",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"CodePath": "bin/plugin.js",
 	"Description": "Manage donations on Tipply via Stream Deck",

@@ -1,6 +1,7 @@
 import {
 	action,
 	KeyDownEvent,
+	KeyAction,
 	SingletonAction,
 	streamDeck,
 	type PropertyInspectorDidAppearEvent,
@@ -13,23 +14,32 @@ import {
 	type PropertyInspectorMessage,
 	type PropertyInspectorStateMessage,
 	type TipplyGlobalSettings,
+	type TipplyToggleAction,
+	getCurrentUser,
+	getToggleButtonTitle,
 	resendLatestTip,
 	skipCurrentTip,
+	toggleSetting,
 	validateAuthCookie,
 } from "../tipply";
 
-type SupportedAction = "resend" | "skip";
+type SupportedAction =
+	| "resend"
+	| "skip"
+	| "alerts"
+	| "alertSound"
+	| "moderatorMode";
 
 abstract class TipplyActionBase extends SingletonAction {
 	protected constructor(
 		private readonly actionType: SupportedAction,
-		private readonly buttonTitle: string,
+		private readonly defaultButtonTitle: string,
 	) {
 		super();
 	}
 
 	override async onWillAppear(ev: WillAppearEvent): Promise<void> {
-		await ev.action.setTitle(this.buttonTitle);
+		await this.syncTitle(ev.action);
 	}
 
 	override async onPropertyInspectorDidAppear(
@@ -54,8 +64,15 @@ abstract class TipplyActionBase extends SingletonAction {
 		try {
 			if (this.actionType === "skip") {
 				await skipCurrentTip(authCookie);
-			} else {
+				await ev.action.setTitle(this.defaultButtonTitle);
+			} else if (this.actionType === "resend") {
 				await resendLatestTip(authCookie);
+				await ev.action.setTitle(this.defaultButtonTitle);
+			} else {
+				const currentUser = await toggleSetting(authCookie, this.actionType);
+				await ev.action.setTitle(
+					getToggleButtonTitle(this.actionType, currentUser),
+				);
 			}
 
 			await ev.action.showOk();
@@ -143,6 +160,33 @@ abstract class TipplyActionBase extends SingletonAction {
 	): Promise<void> {
 		await streamDeck.ui.sendToPropertyInspector(payload);
 	}
+
+	private async syncTitle(action: KeyAction | WillAppearEvent["action"]): Promise<void> {
+		if (this.actionType === "resend" || this.actionType === "skip") {
+			await action.setTitle(this.defaultButtonTitle);
+			return;
+		}
+
+		const globalSettings =
+			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
+		const authCookie = globalSettings.authCookie?.trim();
+
+		if (!authCookie) {
+			await action.setTitle(this.defaultButtonTitle);
+			return;
+		}
+
+		try {
+			const currentUser = await getCurrentUser(authCookie);
+			await action.setTitle(getToggleButtonTitle(this.actionType, currentUser));
+		} catch (error) {
+			streamDeck.logger.warn(
+				`Failed to sync title for Tipply ${this.actionType} action`,
+				error,
+			);
+			await action.setTitle(this.defaultButtonTitle);
+		}
+	}
 }
 
 @action({ UUID: "dev.przxmus.tipply.resend" })
@@ -156,5 +200,26 @@ export class TipplyResendAction extends TipplyActionBase {
 export class TipplySkipAction extends TipplyActionBase {
 	constructor() {
 		super("skip", "Skip");
+	}
+}
+
+@action({ UUID: "dev.przxmus.tipply.alerts" })
+export class TipplyAlertsAction extends TipplyActionBase {
+	constructor() {
+		super("alerts", "Alerts");
+	}
+}
+
+@action({ UUID: "dev.przxmus.tipply.alert-sound" })
+export class TipplyAlertSoundAction extends TipplyActionBase {
+	constructor() {
+		super("alertSound", "Sound");
+	}
+}
+
+@action({ UUID: "dev.przxmus.tipply.moderator-mode" })
+export class TipplyModeratorModeAction extends TipplyActionBase {
+	constructor() {
+		super("moderatorMode", "Mod");
 	}
 }
