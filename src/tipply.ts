@@ -83,20 +83,25 @@ export async function toggleSetting(
 ): Promise<CurrentUser> {
 	const client = createAuthenticatedClient(authCookie);
 	const currentUser = await client.me.get();
+	const optimisticUser = { ...currentUser };
 
 	switch (action) {
 		case "alerts":
 			await client.settings.alerts.toggle(!currentUser.widgetAlertsDisabled);
+			optimisticUser.widgetAlertsDisabled = !currentUser.widgetAlertsDisabled;
 			break;
 		case "alertSound":
 			await client.settings.alertSound.toggle(!currentUser.widgetAlertsSoundDisabled);
+			optimisticUser.widgetAlertsSoundDisabled =
+				!currentUser.widgetAlertsSoundDisabled;
 			break;
 		case "moderatorMode":
 			await client.moderators.mode.toggle();
+			optimisticUser.moderationMode = !currentUser.moderationMode;
 			break;
 	}
 
-	return client.me.get();
+	return optimisticUser;
 }
 
 export function getToggleState(

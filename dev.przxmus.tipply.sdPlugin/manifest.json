@@ -15,7 +15,7 @@
 			"States": [
 				{
 					"Image": "imgs/actions/resend/key",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				}
 			]
 		},
@@ -31,7 +31,7 @@
 			"States": [
 				{
 					"Image": "imgs/actions/skip/key",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				}
 			]
 		},
@@ -48,12 +48,12 @@
 				{
 					"Image": "imgs/actions/alerts/key",
 					"Title": "Alerts",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				},
 				{
 					"Image": "imgs/actions/alerts/key1",
 					"Title": "Alerts",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				}
 			]
 		},
@@ -70,12 +70,12 @@
 				{
 					"Image": "imgs/actions/alert-sound/key",
 					"Title": "Sound",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				},
 				{
 					"Image": "imgs/actions/alert-sound/key1",
 					"Title": "Sound",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				}
 			]
 		},
@@ -92,12 +92,12 @@
 				{
 					"Image": "imgs/actions/moderator-mode/key",
 					"Title": "Mod",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				},
 				{
 					"Image": "imgs/actions/moderator-mode/key1",
 					"Title": "Mod",
-					"TitleAlignment": "middle"
+					"TitleAlignment": "bottom"
 				}
 			]
 		}

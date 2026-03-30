@@ -30,16 +30,21 @@ type SupportedAction =
 	| "alertSound"
 	| "moderatorMode";
 
+type TipplyUser = Awaited<ReturnType<typeof getCurrentUser>>;
+
+const actionInstances = new Set<TipplyActionBase>();
+
 abstract class TipplyActionBase extends SingletonAction {
 	protected constructor(
 		private readonly actionType: SupportedAction,
 		private readonly defaultButtonTitle: string,
 	) {
 		super();
+		actionInstances.add(this);
 	}
 
 	override async onWillAppear(ev: WillAppearEvent): Promise<void> {
-		await this.syncTitle(ev.action);
+		await this.syncAction(ev.action);
 	}
 
 	override async onPropertyInspectorDidAppear(
@@ -70,8 +75,7 @@ abstract class TipplyActionBase extends SingletonAction {
 				await ev.action.setTitle(this.defaultButtonTitle);
 			} else {
 				const currentUser = await toggleSetting(authCookie, this.actionType);
-				await ev.action.setTitle(this.defaultButtonTitle);
-				await ev.action.setState(getToggleState(this.actionType, currentUser));
+				await TipplyActionBase.syncEveryVisibleAction(currentUser);
 			}
 
 			await ev.action.showOk();
@@ -122,6 +126,7 @@ abstract class TipplyActionBase extends SingletonAction {
 				connectedAt: state.connectedAt,
 			});
 			await this.sendAuthState();
+			await TipplyActionBase.syncEveryVisibleAction();
 		} catch (error) {
 			streamDeck.logger.error("Failed to validate Tipply auth cookie", error);
 			await this.sendStateMessage({
@@ -160,38 +165,80 @@ abstract class TipplyActionBase extends SingletonAction {
 		await streamDeck.ui.sendToPropertyInspector(payload);
 	}
 
-	private async syncTitle(action: KeyAction | WillAppearEvent["action"]): Promise<void> {
-		if (this.actionType === "resend" || this.actionType === "skip") {
-			await action.setTitle(this.defaultButtonTitle);
+	private async syncAction(
+		action: KeyAction | WillAppearEvent["action"],
+		currentUser?: TipplyUser,
+	): Promise<void> {
+		await action.setTitle(this.defaultButtonTitle);
+
+		const toggleActionType = this.getToggleActionType();
+
+		if (!this.isKeyAction(action) || !toggleActionType) {
 			return;
 		}
 
+		const resolvedUser = currentUser ?? (await this.getAuthorizedCurrentUser());
+		await action.setState(
+			resolvedUser ? getToggleState(toggleActionType, resolvedUser) : 0,
+		);
+	}
+
+	private isKeyAction(
+		action: KeyAction | WillAppearEvent["action"],
+	): action is KeyAction {
+		return "setState" in action;
+	}
+
+	private async getAuthorizedCurrentUser(): Promise<TipplyUser | undefined> {
 		const globalSettings =
 			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
 		const authCookie = globalSettings.authCookie?.trim();
+		const toggleActionType = this.getToggleActionType();
 
-		if (!authCookie) {
-			await action.setTitle(this.defaultButtonTitle);
-			return;
+		if (!authCookie || !toggleActionType) {
+			return undefined;
 		}
 
 		try {
-			const currentUser = await getCurrentUser(authCookie);
-			await action.setTitle(this.defaultButtonTitle);
-			if (this.isKeyAction(action)) {
-				await action.setState(getToggleState(this.actionType, currentUser));
-			}
+			return await getCurrentUser(authCookie);
 		} catch (error) {
 			streamDeck.logger.warn(
 				`Failed to sync title for Tipply ${this.actionType} action`,
 				error,
 			);
-			await action.setTitle(this.defaultButtonTitle);
+			return undefined;
 		}
 	}
 
-	private isKeyAction(action: KeyAction | WillAppearEvent["action"]): action is KeyAction {
-		return "setState" in action;
+	private async syncVisibleActions(currentUser?: TipplyUser): Promise<void> {
+		const toggleActionType = this.getToggleActionType();
+		const resolvedUser =
+			currentUser && toggleActionType
+				? currentUser
+				: await this.getAuthorizedCurrentUser();
+
+		for (const action of this.actions) {
+			await this.syncAction(action, resolvedUser);
+		}
+	}
+
+	private getToggleActionType(): TipplyToggleAction | undefined {
+		switch (this.actionType) {
+			case "alerts":
+			case "alertSound":
+			case "moderatorMode":
+				return this.actionType;
+			default:
+				return undefined;
+		}
+	}
+
+	private static async syncEveryVisibleAction(
+		currentUser?: TipplyUser,
+	): Promise<void> {
+		for (const instance of actionInstances) {
+			await instance.syncVisibleActions(currentUser);
+		}
 	}
 }
 
