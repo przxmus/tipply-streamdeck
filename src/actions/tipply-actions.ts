@@ -33,14 +33,18 @@ type SupportedAction =
 type TipplyUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
 const actionInstances = new Set<TipplyActionBase>();
+const AUTH_CHECK_INTERVAL_MS = 30_000;
 
 abstract class TipplyActionBase extends SingletonAction {
+	private static authCheckTimer: ReturnType<typeof setInterval> | undefined;
+
 	protected constructor(
 		private readonly actionType: SupportedAction,
 		private readonly defaultButtonTitle: string,
 	) {
 		super();
 		actionInstances.add(this);
+		TipplyActionBase.startAuthChecks();
 	}
 
 	override async onWillAppear(ev: WillAppearEvent): Promise<void> {
@@ -84,6 +88,7 @@ abstract class TipplyActionBase extends SingletonAction {
 				`Failed to execute Tipply ${this.actionType} action`,
 				error,
 			);
+			await TipplyActionBase.refreshConnectionState();
 			await ev.action.showAlert();
 		}
 	}
@@ -139,6 +144,8 @@ abstract class TipplyActionBase extends SingletonAction {
 	}
 
 	private async sendAuthState(): Promise<void> {
+		await TipplyActionBase.refreshConnectionState();
+
 		const globalSettings =
 			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
 
@@ -238,6 +245,54 @@ abstract class TipplyActionBase extends SingletonAction {
 	): Promise<void> {
 		for (const instance of actionInstances) {
 			await instance.syncVisibleActions(currentUser);
+		}
+	}
+
+	private static startAuthChecks(): void {
+		if (TipplyActionBase.authCheckTimer) {
+			return;
+		}
+
+		TipplyActionBase.authCheckTimer = setInterval(() => {
+			void TipplyActionBase.refreshConnectionState();
+		}, AUTH_CHECK_INTERVAL_MS);
+	}
+
+	private static async refreshConnectionState(): Promise<boolean> {
+		const globalSettings =
+			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
+		const authCookie = globalSettings.authCookie?.trim();
+
+		if (!authCookie) {
+			return false;
+		}
+
+		try {
+			const state = await validateAuthCookie(authCookie);
+			const accountChanged =
+				globalSettings.account?.id !== state.account.id ||
+				globalSettings.account?.username !== state.account.username;
+
+			if (!globalSettings.account || accountChanged) {
+				await streamDeck.settings.setGlobalSettings<TipplyGlobalSettings>({
+					...globalSettings,
+					account: state.account,
+					connectedAt: globalSettings.connectedAt ?? state.connectedAt,
+				});
+			}
+
+			return true;
+		} catch (error) {
+			streamDeck.logger.warn("Tipply authorization is no longer valid", error);
+			await streamDeck.settings.setGlobalSettings<TipplyGlobalSettings>({});
+			await streamDeck.ui.sendToPropertyInspector({
+				type: "auth-state",
+				status: "disconnected",
+				message:
+					"Tipply session expired. Paste a fresh auth_token to reconnect.",
+			});
+			await TipplyActionBase.syncEveryVisibleAction();
+			return false;
 		}
 	}
 }
