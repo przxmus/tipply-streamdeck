@@ -4,10 +4,10 @@
 	"Author": "przxmus",
 	"Actions": [
 		{
-			"Name": "Counter",
+			"Name": "Donation Control",
 			"UUID": "dev.przxmus.tipply.increment",
 			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Displays a count, which increments by one on press.",
+			"Tooltip": "Skip the current donation or resend the last donation on Tipply.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
 				"Keypad"

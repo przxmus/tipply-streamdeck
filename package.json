@@ -17,6 +17,7 @@
         "typescript": "^5.2.2"
     },
     "dependencies": {
-        "@elgato/streamdeck": "^2.0.0"
+        "@elgato/streamdeck": "^2.0.0",
+        "tipply-sdk-ts": "^0.2.0"
     }
 }
