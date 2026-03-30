@@ -1,73 +1,58 @@
 import {
 	action,
-	DialAction,
 	KeyDownEvent,
-	KeyAction,
 	SingletonAction,
 	streamDeck,
-	WillAppearEvent,
-	type DidReceiveSettingsEvent,
 	type PropertyInspectorDidAppearEvent,
 	type SendToPluginEvent,
+	type WillAppearEvent,
 } from "@elgato/streamdeck";
+import type { JsonObject } from "@elgato/utils";
 
 import {
-	getCommandLabel,
-	getCommandTitle,
-	getDefaultCommand,
 	type PropertyInspectorMessage,
 	type PropertyInspectorStateMessage,
-	type TipplyActionSettings,
 	type TipplyGlobalSettings,
 	resendLatestTip,
 	skipCurrentTip,
 	validateAuthCookie,
 } from "../tipply";
 
-@action({ UUID: "dev.przxmus.tipply.increment" })
-export class TipplyControlAction extends SingletonAction<TipplyActionSettings> {
-	private async getActionSettings(
-		action: DialAction<TipplyActionSettings> | KeyAction<TipplyActionSettings>,
-	): Promise<TipplyActionSettings> {
-		return action.getSettings();
+type SupportedAction = "resend" | "skip";
+
+abstract class TipplyActionBase extends SingletonAction {
+	protected constructor(
+		private readonly actionType: SupportedAction,
+		private readonly buttonTitle: string,
+	) {
+		super();
 	}
 
-	override async onWillAppear(
-		ev: WillAppearEvent<TipplyActionSettings>,
-	): Promise<void> {
-		await this.syncTitle(ev.action, ev.payload.settings);
-	}
-
-	override async onDidReceiveSettings(
-		ev: DidReceiveSettingsEvent<TipplyActionSettings>,
-	): Promise<void> {
-		await this.syncTitle(ev.action, ev.payload.settings);
+	override async onWillAppear(ev: WillAppearEvent): Promise<void> {
+		await ev.action.setTitle(this.buttonTitle);
 	}
 
 	override async onPropertyInspectorDidAppear(
-		ev: PropertyInspectorDidAppearEvent<TipplyActionSettings>,
+		_ev: PropertyInspectorDidAppearEvent,
 	): Promise<void> {
-		await this.syncTitle(ev.action, await this.getActionSettings(ev.action));
 		await this.sendAuthState();
 	}
 
-	override async onKeyDown(
-		ev: KeyDownEvent<TipplyActionSettings>,
-	): Promise<void> {
+	override async onKeyDown(ev: KeyDownEvent): Promise<void> {
 		const globalSettings =
 			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
 		const authCookie = globalSettings.authCookie?.trim();
 
 		if (!authCookie) {
-			streamDeck.logger.warn("Tipply action invoked without authorization.");
+			streamDeck.logger.warn(
+				`Tipply ${this.actionType} action invoked without authorization.`,
+			);
 			await ev.action.showAlert();
 			return;
 		}
 
-		const command = getDefaultCommand(ev.payload.settings.command);
-
 		try {
-			if (command === "skipCurrentDonation") {
+			if (this.actionType === "skip") {
 				await skipCurrentTip(authCookie);
 			} else {
 				await resendLatestTip(authCookie);
@@ -76,7 +61,7 @@ export class TipplyControlAction extends SingletonAction<TipplyActionSettings> {
 			await ev.action.showOk();
 		} catch (error) {
 			streamDeck.logger.error(
-				`Failed to execute ${getCommandLabel(command)}`,
+				`Failed to execute Tipply ${this.actionType} action`,
 				error,
 			);
 			await ev.action.showAlert();
@@ -84,38 +69,34 @@ export class TipplyControlAction extends SingletonAction<TipplyActionSettings> {
 	}
 
 	override async onSendToPlugin(
-		ev: SendToPluginEvent<PropertyInspectorMessage, TipplyActionSettings>,
+		ev: SendToPluginEvent<PropertyInspectorMessage, JsonObject>,
 	): Promise<void> {
 		const payload = ev.payload;
 
-		if (!payload || typeof payload !== "object" || !("type" in payload)) {
+		if (
+			!payload ||
+			typeof payload !== "object" ||
+			payload.type !== "set-auth-cookie"
+		) {
 			return;
 		}
 
-		switch (payload.type) {
-			case "connect":
-				await this.handleConnect(payload.authCookie);
-				return;
-			case "disconnect":
-				await streamDeck.settings.setGlobalSettings<TipplyGlobalSettings>({});
-				await this.sendAuthState();
-				return;
-			default:
-				return;
-		}
-	}
-
-	private async handleConnect(authCookie?: string): Promise<void> {
-		const normalizedCookie = authCookie?.trim();
+		const normalizedCookie = payload.authCookie?.trim();
 
 		if (!normalizedCookie) {
 			await this.sendStateMessage({
 				type: "auth-state",
-				status: "error",
-				message: "Paste the Tipply auth_token cookie first.",
+				status: "disconnected",
+				message: "Paste a Tipply auth_token cookie to connect this plugin.",
 			});
 			return;
 		}
+
+		await this.sendStateMessage({
+			type: "auth-state",
+			status: "pending",
+			message: "Validating Tipply session...",
+		});
 
 		try {
 			const state = await validateAuthCookie(normalizedCookie);
@@ -131,7 +112,7 @@ export class TipplyControlAction extends SingletonAction<TipplyActionSettings> {
 				type: "auth-state",
 				status: "error",
 				message:
-					"Authorization failed. Refresh the Tipply session and paste a fresh auth_token cookie.",
+					"Authorization failed. Paste a fresh Tipply auth_token cookie from an active session.",
 			});
 		}
 	}
@@ -162,11 +143,18 @@ export class TipplyControlAction extends SingletonAction<TipplyActionSettings> {
 	): Promise<void> {
 		await streamDeck.ui.sendToPropertyInspector(payload);
 	}
+}
 
-	private async syncTitle(
-		action: DialAction<TipplyActionSettings> | KeyAction<TipplyActionSettings>,
-		settings: TipplyActionSettings,
-	): Promise<void> {
-		await action.setTitle(getCommandTitle(settings.command));
+@action({ UUID: "dev.przxmus.tipply.resend" })
+export class TipplyResendAction extends TipplyActionBase {
+	constructor() {
+		super("resend", "Resend");
+	}
+}
+
+@action({ UUID: "dev.przxmus.tipply.skip" })
+export class TipplySkipAction extends TipplyActionBase {
+	constructor() {
+		super("skip", "Skip");
 	}
 }

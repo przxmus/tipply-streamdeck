@@ -1,13 +1,9 @@
-import { createTipplyClient, type Tip } from "tipply-sdk-ts";
+import {
+	createTipplyClient,
+	type Tip,
+} from "tipply-sdk-ts";
 
 export const DEFAULT_TIPPLY_APP_ORIGIN = "https://tipply.pl";
-export const TIPPLY_DASHBOARD_URL = "https://tipply.pl/dashboard";
-
-export type TipplyCommand = "resendLastDonation" | "skipCurrentDonation";
-
-export type TipplyActionSettings = {
-	command?: TipplyCommand;
-};
 
 export type TipplyGlobalSettings = {
 	authCookie?: string;
@@ -18,40 +14,18 @@ export type TipplyGlobalSettings = {
 	connectedAt?: string;
 };
 
-export type PropertyInspectorMessage =
-	| {
-			type: "connect";
-			authCookie?: string;
-	  }
-	| {
-			type: "disconnect";
-	  };
+export type PropertyInspectorMessage = {
+	type: "set-auth-cookie";
+	authCookie?: string;
+};
 
 export type PropertyInspectorStateMessage = {
 	type: "auth-state";
-	status: "connected" | "disconnected" | "error";
+	status: "connected" | "disconnected" | "error" | "pending";
 	account?: TipplyGlobalSettings["account"];
 	connectedAt?: string;
 	message?: string;
 };
-
-export function getDefaultCommand(
-	command?: TipplyCommand,
-): TipplyCommand {
-	return command ?? "resendLastDonation";
-}
-
-export function getCommandTitle(command?: TipplyCommand): string {
-	return getDefaultCommand(command) === "skipCurrentDonation"
-		? "Skip"
-		: "Resend";
-}
-
-export function getCommandLabel(command?: TipplyCommand): string {
-	return getDefaultCommand(command) === "skipCurrentDonation"
-		? "Skip current donate"
-		: "Resend last donate";
-}
 
 export function createAuthenticatedClient(authCookie: string) {
 	return createTipplyClient({

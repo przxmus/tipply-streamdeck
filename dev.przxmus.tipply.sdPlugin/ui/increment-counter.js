@@ -1,16 +1,12 @@
-const DASHBOARD_URL = "https://tipply.pl/dashboard";
-const DEFAULT_COMMAND = "resendLastDonation";
-
 const elements = {
-	command: document.getElementById("command"),
 	authCookie: document.getElementById("auth-cookie"),
-	connect: document.getElementById("connect"),
-	disconnect: document.getElementById("disconnect"),
-	openDashboard: document.getElementById("open-dashboard"),
 	connectionTitle: document.getElementById("connection-title"),
 	connectionDescription: document.getElementById("connection-description"),
 	connectionMeta: document.getElementById("connection-meta"),
 };
+
+let submitTimer;
+let lastSubmittedValue = "";
 
 bootstrap().catch((error) => {
 	console.error("Failed to initialize Tipply property inspector", error);
@@ -20,54 +16,21 @@ bootstrap().catch((error) => {
 	});
 });
 
-async function bootstrap() {
+function bootstrap() {
 	bindEvents();
 	subscribeToPluginMessages();
-
-	const [settingsPayload, globalSettings] = await Promise.all([
-		SDPIComponents.streamDeckClient.getSettings(),
-		SDPIComponents.streamDeckClient.getGlobalSettings(),
-	]);
-
-	const currentCommand = settingsPayload?.settings?.command ?? DEFAULT_COMMAND;
-	elements.command.value = currentCommand;
-	renderState(mapGlobalSettings(globalSettings));
+	renderState({
+		status: "pending",
+		message: "Loading authorization state.",
+	});
 }
 
 function bindEvents() {
-	elements.command.addEventListener("change", () => {
-		SDPIComponents.streamDeckClient.setSettings({
-			command: elements.command.value,
-		});
+	elements.authCookie.addEventListener("input", scheduleTokenSubmit);
+	elements.authCookie.addEventListener("change", () => {
+		void submitToken();
 	});
-
-	elements.openDashboard.addEventListener("click", async () => {
-		await SDPIComponents.streamDeckClient.send("openUrl", {
-			url: DASHBOARD_URL,
-		});
-	});
-
-	elements.connect.addEventListener("click", async () => {
-		const authCookie = elements.authCookie.value.trim();
-
-		setBusy(true);
-		renderState({
-			status: "pending",
-			message: "Validating Tipply session...",
-		});
-
-		await SDPIComponents.streamDeckClient.send("sendToPlugin", {
-			type: "connect",
-			authCookie,
-		});
-	});
-
-	elements.disconnect.addEventListener("click", async () => {
-		setBusy(true);
-		await SDPIComponents.streamDeckClient.send("sendToPlugin", {
-			type: "disconnect",
-		});
-	});
+	elements.authCookie.addEventListener("paste", scheduleTokenSubmit);
 }
 
 function subscribeToPluginMessages() {
@@ -81,8 +44,21 @@ function subscribeToPluginMessages() {
 		setBusy(false);
 		renderState(payload);
 
-		if (payload.status !== "error") {
+		if (payload.status === "connected") {
 			elements.authCookie.value = "";
+			elements.authCookie.placeholder = "Stored securely. Paste a new token to replace it";
+			lastSubmittedValue = "";
+			return;
+		}
+
+		if (payload.status === "disconnected") {
+			elements.authCookie.placeholder = "Paste token to connect or replace";
+			lastSubmittedValue = "";
+			return;
+		}
+
+		if (payload.status === "error") {
+			lastSubmittedValue = "";
 		}
 	});
 }
@@ -92,7 +68,7 @@ function renderState(state) {
 		case "connected":
 			elements.connectionTitle.textContent = `Connected as ${state.account.username}`;
 			elements.connectionDescription.textContent =
-				"Tipply account is ready for Stream Deck actions.";
+				"Tipply token is stored securely and reused across plugin restarts.";
 			elements.connectionMeta.textContent = state.connectedAt
 				? `Authorized at ${formatDate(state.connectedAt)}`
 				: "";
@@ -118,19 +94,33 @@ function renderState(state) {
 	}
 }
 
-function mapGlobalSettings(globalSettings) {
-	if (globalSettings?.authCookie && globalSettings?.account) {
-		return {
-			status: "connected",
-			account: globalSettings.account,
-			connectedAt: globalSettings.connectedAt,
-		};
+function scheduleTokenSubmit() {
+	clearTimeout(submitTimer);
+	submitTimer = setTimeout(() => {
+		void submitToken();
+	}, 400);
+}
+
+async function submitToken() {
+	clearTimeout(submitTimer);
+
+	const authCookie = elements.authCookie.value.trim();
+
+	if (!authCookie || authCookie === lastSubmittedValue) {
+		return;
 	}
 
-	return {
-		status: "disconnected",
-		message: "Paste an auth_token cookie to authorize this plugin.",
-	};
+	lastSubmittedValue = authCookie;
+	setBusy(true);
+	renderState({
+		status: "pending",
+		message: "Validating Tipply session...",
+	});
+
+	await SDPIComponents.streamDeckClient.send("sendToPlugin", {
+		type: "set-auth-cookie",
+		authCookie,
+	});
 }
 
 function formatDate(value) {
@@ -145,9 +135,5 @@ function formatDate(value) {
 }
 
 function setBusy(value) {
-	elements.connect.disabled = value;
-	elements.disconnect.disabled = value;
-	elements.openDashboard.disabled = value;
-	elements.command.disabled = value;
 	elements.authCookie.disabled = value;
 }

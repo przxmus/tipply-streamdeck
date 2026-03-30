@@ -4,10 +4,26 @@
 	"Author": "przxmus",
 	"Actions": [
 		{
-			"Name": "Donation Control",
-			"UUID": "dev.przxmus.tipply.increment",
+			"Name": "Resend Donate",
+			"UUID": "dev.przxmus.tipply.resend",
 			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Skip the current donation or resend the last donation on Tipply.",
+			"Tooltip": "Resend the last donation on Tipply.",
+			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Skip Donate",
+			"UUID": "dev.przxmus.tipply.skip",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Skip the currently displayed donation on Tipply.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
 				"Keypad"
