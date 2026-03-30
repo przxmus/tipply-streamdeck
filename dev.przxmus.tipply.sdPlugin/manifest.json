@@ -6,7 +6,7 @@
 		{
 			"Name": "Resend Last Donate",
 			"UUID": "dev.przxmus.tipply.resend",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/resend/icon",
 			"Tooltip": "Resend the last donation on Tipply.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
@@ -14,7 +14,7 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/resend/key",
 					"TitleAlignment": "middle"
 				}
 			]
@@ -22,7 +22,7 @@
 		{
 			"Name": "Skip Donate",
 			"UUID": "dev.przxmus.tipply.skip",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/skip/icon",
 			"Tooltip": "Skip the currently displayed donation on Tipply.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
@@ -30,7 +30,7 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/skip/key",
 					"TitleAlignment": "middle"
 				}
 			]
@@ -38,7 +38,7 @@
 		{
 			"Name": "Toggle Alerts",
 			"UUID": "dev.przxmus.tipply.alerts",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/alerts/icon",
 			"Tooltip": "Toggle Tipply alerts on or off.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
@@ -46,12 +46,12 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/alerts/key",
 					"Title": "Alerts",
 					"TitleAlignment": "middle"
 				},
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/alerts/key1",
 					"Title": "Alerts",
 					"TitleAlignment": "middle"
 				}
@@ -60,7 +60,7 @@
 		{
 			"Name": "Toggle Alert Sound",
 			"UUID": "dev.przxmus.tipply.alert-sound",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/alert-sound/icon",
 			"Tooltip": "Toggle Tipply alert sound on or off.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
@@ -68,12 +68,12 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/alert-sound/key",
 					"Title": "Sound",
 					"TitleAlignment": "middle"
 				},
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/alert-sound/key1",
 					"Title": "Sound",
 					"TitleAlignment": "middle"
 				}
@@ -82,7 +82,7 @@
 		{
 			"Name": "Toggle Moderator Mode",
 			"UUID": "dev.przxmus.tipply.moderator-mode",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/moderator-mode/icon",
 			"Tooltip": "Toggle Tipply moderator mode.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
@@ -90,12 +90,12 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/moderator-mode/key",
 					"Title": "Mod",
 					"TitleAlignment": "middle"
 				},
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/moderator-mode/key1",
 					"Title": "Mod",
 					"TitleAlignment": "middle"
 				}
