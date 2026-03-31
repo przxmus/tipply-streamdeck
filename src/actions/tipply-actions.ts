@@ -11,13 +11,16 @@ import {
 import type { JsonObject } from "@elgato/utils";
 
 import {
+	clearAuthenticatedSession,
 	type PropertyInspectorMessage,
 	type PropertyInspectorStateMessage,
 	type TipplyGlobalSettings,
 	type TipplyToggleAction,
 	getCurrentUser,
 	getToggleState,
+	hasAuthenticatedSession,
 	resendLatestTip,
+	setAuthenticatedSession,
 	skipCurrentTip,
 	toggleSetting,
 	validateAuthCookie,
@@ -33,18 +36,14 @@ type SupportedAction =
 type TipplyUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
 const actionInstances = new Set<TipplyActionBase>();
-const AUTH_CHECK_INTERVAL_MS = 30_000;
 
 abstract class TipplyActionBase extends SingletonAction {
-	private static authCheckTimer: ReturnType<typeof setInterval> | undefined;
-
 	protected constructor(
 		private readonly actionType: SupportedAction,
 		private readonly defaultButtonTitle: string,
 	) {
 		super();
 		actionInstances.add(this);
-		TipplyActionBase.startAuthChecks();
 	}
 
 	override async onWillAppear(ev: WillAppearEvent): Promise<void> {
@@ -72,13 +71,16 @@ abstract class TipplyActionBase extends SingletonAction {
 
 		try {
 			if (this.actionType === "skip") {
-				await skipCurrentTip(authCookie);
+				setAuthenticatedSession(authCookie);
+				await skipCurrentTip();
 				await ev.action.setTitle(this.defaultButtonTitle);
 			} else if (this.actionType === "resend") {
-				await resendLatestTip(authCookie);
+				setAuthenticatedSession(authCookie);
+				await resendLatestTip();
 				await ev.action.setTitle(this.defaultButtonTitle);
 			} else {
-				const currentUser = await toggleSetting(authCookie, this.actionType);
+				setAuthenticatedSession(authCookie);
+				const currentUser = await toggleSetting(this.actionType);
 				await TipplyActionBase.syncEveryVisibleAction(currentUser);
 			}
 
@@ -125,6 +127,7 @@ abstract class TipplyActionBase extends SingletonAction {
 
 		try {
 			const state = await validateAuthCookie(normalizedCookie);
+			setAuthenticatedSession(normalizedCookie);
 			await streamDeck.settings.setGlobalSettings<TipplyGlobalSettings>({
 				authCookie: normalizedCookie,
 				account: state.account,
@@ -199,15 +202,18 @@ abstract class TipplyActionBase extends SingletonAction {
 	private async getAuthorizedCurrentUser(): Promise<TipplyUser | undefined> {
 		const globalSettings =
 			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
-		const authCookie = globalSettings.authCookie?.trim();
 		const toggleActionType = this.getToggleActionType();
 
-		if (!authCookie || !toggleActionType) {
+		if (!toggleActionType) {
 			return undefined;
 		}
 
 		try {
-			return await getCurrentUser(authCookie);
+			const authCookie = globalSettings.authCookie?.trim();
+			if (authCookie) {
+				setAuthenticatedSession(authCookie);
+			}
+			return hasAuthenticatedSession() ? await getCurrentUser() : undefined;
 		} catch (error) {
 			streamDeck.logger.warn(
 				`Failed to sync title for Tipply ${this.actionType} action`,
@@ -248,16 +254,6 @@ abstract class TipplyActionBase extends SingletonAction {
 		}
 	}
 
-	private static startAuthChecks(): void {
-		if (TipplyActionBase.authCheckTimer) {
-			return;
-		}
-
-		TipplyActionBase.authCheckTimer = setInterval(() => {
-			void TipplyActionBase.refreshConnectionState();
-		}, AUTH_CHECK_INTERVAL_MS);
-	}
-
 	private static async refreshConnectionState(): Promise<boolean> {
 		const globalSettings =
 			await streamDeck.settings.getGlobalSettings<TipplyGlobalSettings>();
@@ -268,22 +264,27 @@ abstract class TipplyActionBase extends SingletonAction {
 		}
 
 		try {
-			const state = await validateAuthCookie(authCookie);
+			setAuthenticatedSession(authCookie);
+			const currentUser = await getCurrentUser();
 			const accountChanged =
-				globalSettings.account?.id !== state.account.id ||
-				globalSettings.account?.username !== state.account.username;
+				globalSettings.account?.id !== currentUser.id ||
+				globalSettings.account?.username !== currentUser.username;
 
 			if (!globalSettings.account || accountChanged) {
 				await streamDeck.settings.setGlobalSettings<TipplyGlobalSettings>({
 					...globalSettings,
-					account: state.account,
-					connectedAt: globalSettings.connectedAt ?? state.connectedAt,
+					account: {
+						id: currentUser.id,
+						username: currentUser.username,
+					},
+					connectedAt: globalSettings.connectedAt ?? new Date().toISOString(),
 				});
 			}
 
 			return true;
 		} catch (error) {
 			streamDeck.logger.warn("Tipply authorization is no longer valid", error);
+			clearAuthenticatedSession();
 			await streamDeck.settings.setGlobalSettings<TipplyGlobalSettings>({});
 			await streamDeck.ui.sendToPropertyInspector({
 				type: "auth-state",

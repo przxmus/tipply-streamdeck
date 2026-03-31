@@ -1,6 +1,7 @@
 import {
 	type CurrentUser,
 	createTipplyClient,
+	type TipplyClient,
 	type Tip,
 } from "tipply-sdk-ts";
 
@@ -33,18 +34,64 @@ export type TipplyToggleAction =
 	| "alertSound"
 	| "moderatorMode";
 
-export function createAuthenticatedClient(authCookie: string) {
+let sessionAuthCookie: string | undefined;
+let authenticatedClient: TipplyClient | undefined;
+
+function buildAuthenticatedClient(): TipplyClient {
 	return createTipplyClient({
-		authCookie,
+		session: {
+			getAuthCookie: () => sessionAuthCookie,
+		},
+		auth: {
+			refreshTokenOnRequests: true,
+			refreshTokenEvery: true,
+		},
 		appOrigin: DEFAULT_TIPPLY_APP_ORIGIN,
 	});
+}
+
+function disposeAuthenticatedClient(): void {
+	authenticatedClient?.close();
+	authenticatedClient = undefined;
+}
+
+export function setAuthenticatedSession(authCookie: string): void {
+	sessionAuthCookie = authCookie;
+	disposeAuthenticatedClient();
+}
+
+export function clearAuthenticatedSession(): void {
+	sessionAuthCookie = undefined;
+	disposeAuthenticatedClient();
+}
+
+export function hasAuthenticatedSession(): boolean {
+	return Boolean(sessionAuthCookie?.trim());
+}
+
+export function getAuthenticatedClient(): TipplyClient {
+	if (!hasAuthenticatedSession()) {
+		throw new Error("Tipply auth session is not configured.");
+	}
+
+	authenticatedClient ??= buildAuthenticatedClient();
+	return authenticatedClient;
 }
 
 export async function validateAuthCookie(authCookie: string): Promise<{
 	account: NonNullable<TipplyGlobalSettings["account"]>;
 	connectedAt: string;
 }> {
-	const currentUser = await createAuthenticatedClient(authCookie).me.get();
+	const client = createTipplyClient({
+		authCookie,
+		auth: {
+			refreshTokenOnRequests: true,
+			refreshTokenEvery: true,
+		},
+		appOrigin: DEFAULT_TIPPLY_APP_ORIGIN,
+	});
+	const currentUser = await client.me.get();
+	client.close();
 
 	return {
 		account: {
@@ -55,8 +102,8 @@ export async function validateAuthCookie(authCookie: string): Promise<{
 	};
 }
 
-export async function resendLatestTip(authCookie: string): Promise<Tip> {
-	const client = createAuthenticatedClient(authCookie);
+export async function resendLatestTip(): Promise<Tip> {
+	const client = getAuthenticatedClient();
 	const tips = await client.tips.list().limit(10).get();
 	const latestTip = getLatestTip(tips);
 
@@ -69,19 +116,18 @@ export async function resendLatestTip(authCookie: string): Promise<Tip> {
 	return latestTip;
 }
 
-export async function skipCurrentTip(authCookie: string): Promise<void> {
-	await createAuthenticatedClient(authCookie).tipAlerts.skipCurrent();
+export async function skipCurrentTip(): Promise<void> {
+	await getAuthenticatedClient().tipAlerts.skipCurrent();
 }
 
-export async function getCurrentUser(authCookie: string): Promise<CurrentUser> {
-	return createAuthenticatedClient(authCookie).me.get();
+export async function getCurrentUser(): Promise<CurrentUser> {
+	return getAuthenticatedClient().me.get();
 }
 
 export async function toggleSetting(
-	authCookie: string,
 	action: TipplyToggleAction,
 ): Promise<CurrentUser> {
-	const client = createAuthenticatedClient(authCookie);
+	const client = getAuthenticatedClient();
 	const currentUser = await client.me.get();
 	const optimisticUser = { ...currentUser };
 
