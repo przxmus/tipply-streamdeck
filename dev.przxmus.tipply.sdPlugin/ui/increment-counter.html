@@ -1,117 +1,134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
-<head lang="en">
+  <head lang="en">
     <title>Tipply Settings</title>
     <meta charset="utf-8" />
     <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
     <style>
-        html,
-        body {
-            margin: 0;
-            width: 100%;
-            height: 100%;
-        }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #1a1a1a;
-            color: #e0e0e0;
-            padding: 16px;
-            box-sizing: border-box;
-            min-width: 280px;
-        }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        background: #1a1a1a;
+        color: #e0e0e0;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        box-sizing: border-box;
+        min-width: 280px;
+      }
 
-        sdpi-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            width: 100%;
-        }
+      .panel {
+        width: min(100% - 32px, 520px);
+        display: grid;
+        gap: 16px;
+      }
 
-        sdpi-item:last-child {
-            margin-bottom: 0;
-        }
+      .row {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        align-items: center;
+        column-gap: 16px;
+        width: 100%;
+      }
 
-        .label {
-            font-size: 13px;
-            font-weight: 400;
-            color: #a0a0a0;
-            min-width: 56px;
-            flex-shrink: 0;
-            text-transform: none;
-            letter-spacing: 0;
-        }
+      .row--link {
+        grid-template-columns: 76px minmax(0, 1fr);
+      }
 
-        input[type="password"],
-        input[type="text"] {
-            flex: 1;
-            min-width: 0;
-            padding: 8px 10px;
-            font-size: 13px;
-            background: #252525;
-            border: 1px solid #333;
-            border-radius: 4px;
-            color: #e0e0e0;
-            outline: none;
-            transition: border-color 0.15s ease;
-        }
+      .label {
+        font-size: 13px;
+        font-weight: 400;
+        color: #a0a0a0;
+        min-width: 0;
+        text-transform: none;
+        letter-spacing: 0;
+      }
 
-        input[type="password"]:focus,
-        input[type="text"]:focus {
-            border-color: #555;
-        }
+      input[type="password"],
+      input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        padding: 8px 10px;
+        font-size: 13px;
+        background: #252525;
+        border: 1px solid #333;
+        border-radius: 4px;
+        color: #e0e0e0;
+        outline: none;
+        transition: border-color 0.15s ease;
+      }
 
-        input::placeholder {
-            color: #555;
-        }
+      input[type="password"]:focus,
+      input[type="text"]:focus {
+        border-color: #555;
+      }
 
-        a {
-            color: #7a7a7a;
-            text-decoration: none;
-            font-size: 12px;
-            transition: color 0.15s ease;
-        }
+      input::placeholder {
+        color: #555;
+      }
 
-        a:hover {
-            color: #a0a0a0;
-        }
+      a {
+        color: #7a7a7a;
+        text-decoration: none;
+        font-size: 12px;
+        transition: color 0.15s ease;
+      }
 
-        #connection-title {
-            font-size: 13px;
-            font-weight: 400;
-            color: #d0d0d0;
-        }
+      a:hover {
+        color: #a0a0a0;
+      }
 
-        #connection-title.connected {
-            color: #8bc34a;
-        }
+      #connection-title {
+        font-size: 13px;
+        font-weight: 400;
+        color: #d0d0d0;
+      }
 
-        #connection-title.error {
-            color: #e57373;
-        }
+      #connection-title.connected {
+        color: #8bc34a;
+      }
+
+      #connection-title.error {
+        color: #e57373;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <sdpi-item>
-        <span class="label">Token:</span>
-        <input id="auth-cookie" type="password" autocomplete="off" placeholder="Paste token to connect" />
-    </sdpi-item>
+  <body>
+    <div class="panel">
+      <div class="row">
+      <span class="label">Token:</span>
+      <input
+        id="auth-cookie"
+        type="password"
+        autocomplete="off"
+        placeholder="Paste token to connect"
+      />
+      </div>
 
-    <sdpi-item>
-        <span class="label"></span>
-        <a href="https://tipply-sdk.przxmus.dev/authentication/#jak-pobra%C4%87-auth_token-z-devtools"
-            target="_blank">How to get auth token?</a>
-    </sdpi-item>
+      <div class="row row--link">
+      <span class="label"></span>
+      <a
+        href="https://tipply-sdk.przxmus.dev/authentication/#jak-pobra%C4%87-auth_token-z-devtools"
+        target="_blank"
+        >How to get auth token?</a
+      >
+      </div>
 
-    <sdpi-item>
-        <span class="label">Status:</span>
-        <span id="connection-title">Checking Tipply connection...</span>
-    </sdpi-item>
+      <div class="row">
+      <span class="label">Status:</span>
+      <span id="connection-title">Checking Tipply connection...</span>
+      </div>
+    </div>
 
     <script src="./increment-counter.js"></script>
-</body>
-
+  </body>
 </html>
