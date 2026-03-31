@@ -1,7 +1,12 @@
 {
     "scripts": {
         "build": "rollup -c",
-        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart dev.przxmus.tipply\""
+        "typecheck": "tsc --noEmit",
+        "verify": "bun run typecheck && bun run build",
+        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart dev.przxmus.tipply\"",
+        "pack": "streamdeck pack dev.przxmus.tipply.sdPlugin",
+        "link": "streamdeck link dev.przxmus.tipply.sdPlugin",
+        "unlink": "streamdeck unlink dev.przxmus.tipply.sdPlugin"
     },
     "type": "module",
     "devDependencies": {
