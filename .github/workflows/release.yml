@@ -175,6 +175,12 @@ jobs:
           git add dev.przxmus.tipply.sdPlugin/manifest.json
           git commit -m "chore(release): v${TAG_VERSION}" -m "Release v${TAG_VERSION}."
 
+      - name: Pack plugin
+        run: bun run pack -- --force
+
+      - name: Verify packed plugin exists
+        run: test -f dev.przxmus.tipply.streamDeckPlugin
+
       - name: Create release tag
         env:
           TAG_NAME: ${{ steps.version.outputs.tag_name }}
@@ -208,6 +214,17 @@ jobs:
             });
 
             core.setOutput("html_url", release.data.html_url);
+            core.setOutput("upload_url", release.data.upload_url);
+
+      - name: Upload plugin asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.github_release.outputs.upload_url }}
+          asset_path: ./dev.przxmus.tipply.streamDeckPlugin
+          asset_name: dev.przxmus.tipply.streamDeckPlugin
+          asset_content_type: application/octet-stream
 
       - name: Write workflow summary
         env:
@@ -220,5 +237,6 @@ jobs:
             echo
             echo "- Version: \`$NEXT_VERSION\`"
             echo "- Tag: \`$TAG_NAME\`"
+            echo "- Asset: \`dev.przxmus.tipply.streamDeckPlugin\`"
             echo "- Release: $RELEASE_URL"
           } >> "$GITHUB_STEP_SUMMARY"
