@@ -4,7 +4,7 @@
     "": {
       "dependencies": {
         "@elgato/streamdeck": "^2.0.0",
-        "tipply-sdk-ts": "^0.2.0",
+        "tipply-sdk-ts": "0.2.1",
       },
       "devDependencies": {
         "@elgato/cli": "^1.7.3",
@@ -329,7 +329,7 @@
 
     "terser": ["terser@5.46.1", "", { "dependencies": { "@jridgewell/source-map": "^0.3.3", "acorn": "^8.15.0", "commander": "^2.20.0", "source-map-support": "~0.5.20" }, "bin": "bin/terser" }, "sha512-vzCjQO/rgUuK9sf8VJZvjqiqiHFaZLnOiimmUuOKODxWL8mm/xua7viT7aqX7dgPY60otQjUotzFMmCB4VdmqQ=="],
 
-    "tipply-sdk-ts": ["tipply-sdk-ts@0.2.0", "", { "dependencies": { "socket.io-client": "2.5.0", "zod": "^4.3.6" } }, "sha512-yc04TIu3+w4goGcffM5qC9JdDhn4PhU3rZxkls/Q8dmGXww+x42XBV6p+OR7lYRo1dROnusVFZtRapFusV/sZQ=="],
+    "tipply-sdk-ts": ["tipply-sdk-ts@0.2.1", "", { "dependencies": { "socket.io-client": "2.5.0", "zod": "^4.3.6" } }, "sha512-AXbeRT1h0wAgIbDxvTkd35c+whcr0Llj5fieSuX1MSjkVnvu4puuDDYYzAXBAKi54P936HRo/LpcQkMtflgZxA=="],
 
     "to-array": ["to-array@0.1.4", "", {}, "sha512-LhVdShQD/4Mk4zXNroIQZJC+Ap3zgLcDuwEdcmLv9CCO73NWockQDwyUnW/m8VX/EElfL6FcYx7EeutN4HJA6A=="],
 
