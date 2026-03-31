@@ -19,8 +19,9 @@
         background: #1a1a1a;
         color: #e0e0e0;
         display: grid;
-        place-items: center;
-        padding: 0;
+        justify-items: center;
+        align-content: start;
+        padding: 16px 0 0;
         box-sizing: border-box;
         min-width: 280px;
       }
@@ -28,19 +29,20 @@
       .panel {
         width: min(100% - 32px, 520px);
         display: grid;
-        gap: 16px;
+        gap: 12px;
       }
 
       .row {
         display: grid;
         grid-template-columns: 76px minmax(0, 1fr);
         align-items: center;
-        column-gap: 16px;
+        column-gap: 12px;
         width: 100%;
       }
 
       .row--link {
-        grid-template-columns: 76px minmax(0, 1fr);
+        margin-top: -2px;
+        margin-bottom: -2px;
       }
 
       .label {
@@ -48,6 +50,7 @@
         font-weight: 400;
         color: #a0a0a0;
         min-width: 0;
+        justify-self: end;
         text-transform: none;
         letter-spacing: 0;
       }
@@ -105,27 +108,27 @@
   <body>
     <div class="panel">
       <div class="row">
-      <span class="label">Token:</span>
-      <input
-        id="auth-cookie"
-        type="password"
-        autocomplete="off"
-        placeholder="Paste token to connect"
-      />
+        <span class="label">Token:</span>
+        <input
+          id="auth-cookie"
+          type="password"
+          autocomplete="off"
+          placeholder="Paste token to connect"
+        />
       </div>
 
       <div class="row row--link">
-      <span class="label"></span>
-      <a
-        href="https://tipply-sdk.przxmus.dev/authentication/#jak-pobra%C4%87-auth_token-z-devtools"
-        target="_blank"
-        >How to get auth token?</a
-      >
+        <span class="label"></span>
+        <a
+          href="https://tipply-sdk.przxmus.dev/authentication/#jak-pobra%C4%87-auth_token-z-devtools"
+          target="_blank"
+          >How to get auth token?</a
+        >
       </div>
 
       <div class="row">
-      <span class="label">Status:</span>
-      <span id="connection-title">Checking Tipply connection...</span>
+        <span class="label">Status:</span>
+        <span id="connection-title">Checking Tipply connection...</span>
       </div>
     </div>
 
