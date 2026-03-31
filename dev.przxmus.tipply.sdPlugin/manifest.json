@@ -1,129 +1,129 @@
 {
-	"Name": "Tipply",
-	"Version": "0.1.0.0",
-	"Author": "przxmus",
-	"Actions": [
-		{
-			"Name": "Resend Last Donate",
-			"UUID": "dev.przxmus.tipply.resend",
-			"Icon": "imgs/actions/resend/icon",
-			"Tooltip": "Resend the last donation on Tipply.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/resend/key",
-					"TitleAlignment": "bottom"
-				}
-			]
-		},
-		{
-			"Name": "Skip Donate",
-			"UUID": "dev.przxmus.tipply.skip",
-			"Icon": "imgs/actions/skip/icon",
-			"Tooltip": "Skip the currently displayed donation on Tipply.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/skip/key",
-					"TitleAlignment": "bottom"
-				}
-			]
-		},
-		{
-			"Name": "Toggle Alerts",
-			"UUID": "dev.przxmus.tipply.alerts",
-			"Icon": "imgs/actions/alerts/icon",
-			"Tooltip": "Toggle Tipply alerts on or off.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/alerts/key",
-					"Title": "Alerts",
-					"TitleAlignment": "bottom"
-				},
-				{
-					"Image": "imgs/actions/alerts/key1",
-					"Title": "Alerts",
-					"TitleAlignment": "bottom"
-				}
-			]
-		},
-		{
-			"Name": "Toggle Alert Sound",
-			"UUID": "dev.przxmus.tipply.alert-sound",
-			"Icon": "imgs/actions/alert-sound/icon",
-			"Tooltip": "Toggle Tipply alert sound on or off.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/alert-sound/key",
-					"Title": "Sound",
-					"TitleAlignment": "bottom"
-				},
-				{
-					"Image": "imgs/actions/alert-sound/key1",
-					"Title": "Sound",
-					"TitleAlignment": "bottom"
-				}
-			]
-		},
-		{
-			"Name": "Toggle Moderator Mode",
-			"UUID": "dev.przxmus.tipply.moderator-mode",
-			"Icon": "imgs/actions/moderator-mode/icon",
-			"Tooltip": "Toggle Tipply moderator mode.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/moderator-mode/key",
-					"Title": "Mod",
-					"TitleAlignment": "bottom"
-				},
-				{
-					"Image": "imgs/actions/moderator-mode/key1",
-					"Title": "Mod",
-					"TitleAlignment": "bottom"
-				}
-			]
-		}
-	],
-	"Category": "Tipply",
-	"CategoryIcon": "imgs/plugin/category-icon",
-	"CodePath": "bin/plugin.js",
-	"Description": "Manage donations on Tipply via Stream Deck",
-	"Icon": "imgs/plugin/marketplace",
-	"SDKVersion": 3,
-	"Software": {
-		"MinimumVersion": "6.9"
-	},
-	"OS": [
-		{
-			"Platform": "mac",
-			"MinimumVersion": "12"
-		},
-		{
-			"Platform": "windows",
-			"MinimumVersion": "10"
-		}
-	],
-	"Nodejs": {
-		"Version": "20",
-		"Debug": "enabled"
-	},
-	"UUID": "dev.przxmus.tipply"
+  "Name": "Tipply",
+  "Version": "1.0.0.0",
+  "Author": "przxmus",
+  "Actions": [
+    {
+      "Name": "Resend Last Donate",
+      "UUID": "dev.przxmus.tipply.resend",
+      "Icon": "imgs/actions/resend/icon",
+      "Tooltip": "Resend the last donation on Tipply.",
+      "PropertyInspectorPath": "ui/increment-counter.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/resend/key",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Name": "Skip Donate",
+      "UUID": "dev.przxmus.tipply.skip",
+      "Icon": "imgs/actions/skip/icon",
+      "Tooltip": "Skip the currently displayed donation on Tipply.",
+      "PropertyInspectorPath": "ui/increment-counter.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/skip/key",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Name": "Toggle Alerts",
+      "UUID": "dev.przxmus.tipply.alerts",
+      "Icon": "imgs/actions/alerts/icon",
+      "Tooltip": "Toggle Tipply alerts on or off.",
+      "PropertyInspectorPath": "ui/increment-counter.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/alerts/key",
+          "Title": "Alerts",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "imgs/actions/alerts/key1",
+          "Title": "Alerts",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Name": "Toggle Alert Sound",
+      "UUID": "dev.przxmus.tipply.alert-sound",
+      "Icon": "imgs/actions/alert-sound/icon",
+      "Tooltip": "Toggle Tipply alert sound on or off.",
+      "PropertyInspectorPath": "ui/increment-counter.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/alert-sound/key",
+          "Title": "Sound",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "imgs/actions/alert-sound/key1",
+          "Title": "Sound",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    },
+    {
+      "Name": "Toggle Moderator Mode",
+      "UUID": "dev.przxmus.tipply.moderator-mode",
+      "Icon": "imgs/actions/moderator-mode/icon",
+      "Tooltip": "Toggle Tipply moderator mode.",
+      "PropertyInspectorPath": "ui/increment-counter.html",
+      "Controllers": [
+        "Keypad"
+      ],
+      "States": [
+        {
+          "Image": "imgs/actions/moderator-mode/key",
+          "Title": "Mod",
+          "TitleAlignment": "bottom"
+        },
+        {
+          "Image": "imgs/actions/moderator-mode/key1",
+          "Title": "Mod",
+          "TitleAlignment": "bottom"
+        }
+      ]
+    }
+  ],
+  "Category": "Tipply",
+  "CategoryIcon": "imgs/plugin/category-icon",
+  "CodePath": "bin/plugin.js",
+  "Description": "Manage donations on Tipply via Stream Deck",
+  "Icon": "imgs/plugin/marketplace",
+  "SDKVersion": 3,
+  "Software": {
+    "MinimumVersion": "6.9"
+  },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "12"
+    },
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Nodejs": {
+    "Version": "20",
+    "Debug": "enabled"
+  },
+  "UUID": "dev.przxmus.tipply"
 }
