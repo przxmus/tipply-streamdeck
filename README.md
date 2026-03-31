@@ -18,9 +18,3 @@ Tipply Stream Deck is a simple plugin for controlling your Tipply donations from
 4. Wait for the connection status to turn green, then use the button.
 
 If your session expires, paste a fresh `auth_token` cookie from an active Tipply session.
-
-## Requirements
-
-- Stream Deck app
-- a Tipply account
-- macOS or Windows
