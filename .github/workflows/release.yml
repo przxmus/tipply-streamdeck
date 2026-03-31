@@ -1,0 +1,224 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Version bump type
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      custom_version:
+        description: Exact custom version, e.g. 1.2.3 or 1.2.3.4
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Prepare and publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run verification checks
+        run: bun run verify
+
+      - name: Compute next version
+        id: version
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          CUSTOM_VERSION: ${{ inputs.custom_version }}
+        run: |
+          NEXT_VERSION="$(bun -e '
+            import fs from "node:fs";
+
+            const manifestPath = "dev.przxmus.tipply.sdPlugin/manifest.json";
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+            const currentVersion = String(manifest.Version ?? "");
+            const releaseType = process.env.RELEASE_TYPE ?? "patch";
+            const customVersion = process.env.CUSTOM_VERSION?.trim() ?? "";
+            const versionPattern = /^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$/;
+
+            function fail(message) {
+              console.error(message);
+              process.exit(1);
+            }
+
+            function parseVersion(version) {
+              const match = version.match(versionPattern);
+              if (!match) fail(`Invalid version: ${version}`);
+
+              const [, major, minor, patch, build = "0"] = match;
+              return {
+                manifestVersion: `${major}.${minor}.${patch}.${build}`,
+                tagVersion: `${major}.${minor}.${patch}${build === "0" ? "" : `.${build}`}`,
+              };
+            }
+
+            if (!versionPattern.test(currentVersion)) {
+              fail(`Unsupported current manifest version: ${currentVersion}`);
+            }
+
+            let manifestVersion = "";
+            let tagVersion = "";
+
+            if (releaseType === "custom") {
+              if (!customVersion) {
+                fail("custom_version is required when release_type=custom");
+              }
+
+              if (!versionPattern.test(customVersion)) {
+                fail(`Invalid custom version: ${customVersion}`);
+              }
+
+              const parsedCustomVersion = parseVersion(customVersion);
+              manifestVersion = parsedCustomVersion.manifestVersion;
+              tagVersion = parsedCustomVersion.tagVersion;
+            } else {
+              const match = currentVersion.match(versionPattern);
+              if (!match) fail(`Invalid current manifest version: ${currentVersion}`);
+
+              let [, major, minor, patch] = match;
+              let nextMajor = Number(major);
+              let nextMinor = Number(minor);
+              let nextPatch = Number(patch);
+
+              if (releaseType === "patch") {
+                nextPatch += 1;
+              } else if (releaseType === "minor") {
+                nextMinor += 1;
+                nextPatch = 0;
+              } else if (releaseType === "major") {
+                nextMajor += 1;
+                nextMinor = 0;
+                nextPatch = 0;
+              } else {
+                fail(`Unsupported release_type: ${releaseType}`);
+              }
+
+              manifestVersion = `${nextMajor}.${nextMinor}.${nextPatch}.0`;
+              tagVersion = `${nextMajor}.${nextMinor}.${nextPatch}`;
+            }
+
+            if (manifestVersion === currentVersion) {
+              fail("Next version must be different from the current version.");
+            }
+
+            console.log(`${manifestVersion}\n${tagVersion}`);
+          ')"
+
+          NEXT_MANIFEST_VERSION="$(printf '%s' "$NEXT_VERSION" | sed -n '1p')"
+          NEXT_TAG_VERSION="$(printf '%s' "$NEXT_VERSION" | sed -n '2p')"
+
+          echo "manifest_version=$NEXT_MANIFEST_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag_version=$NEXT_TAG_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag_name=v$NEXT_TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.tag_name }}
+          RELEASE_NOTES_TO: HEAD
+        run: bun scripts/generate-release-notes.mjs > release-notes.md
+
+      - name: Bump manifest version
+        env:
+          NEXT_VERSION: ${{ steps.version.outputs.manifest_version }}
+        run: |
+          bun -e '
+            import fs from "node:fs";
+
+            const manifestPath = "dev.przxmus.tipply.sdPlugin/manifest.json";
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+            manifest.Version = process.env.NEXT_VERSION;
+            fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          '
+
+      - name: Check release tag does not exist yet
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG_NAME" >/dev/null; then
+            echo "Tag $TAG_NAME already exists." >&2
+            exit 1
+          fi
+
+      - name: Commit version bump
+        env:
+          TAG_VERSION: ${{ steps.version.outputs.tag_version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dev.przxmus.tipply.sdPlugin/manifest.json
+          git commit -m "chore(release): v${TAG_VERSION}" -m "Release v${TAG_VERSION}."
+
+      - name: Create release tag
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+        run: git tag "$TAG_NAME"
+
+      - name: Push commit and tag
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+        run: |
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "$TAG_NAME"
+
+      - name: Create GitHub release
+        id: github_release
+        uses: actions/github-script@v7
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const body = fs.readFileSync("release-notes.md", "utf8");
+
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: process.env.TAG_NAME,
+              name: process.env.TAG_NAME,
+              body,
+              draft: false,
+              prerelease: false,
+            });
+
+            core.setOutput("html_url", release.data.html_url);
+
+      - name: Write workflow summary
+        env:
+          NEXT_VERSION: ${{ steps.version.outputs.manifest_version }}
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+          RELEASE_URL: ${{ steps.github_release.outputs.html_url }}
+        run: |
+          {
+            echo "## Release ready"
+            echo
+            echo "- Version: \`$NEXT_VERSION\`"
+            echo "- Tag: \`$TAG_NAME\`"
+            echo "- Release: $RELEASE_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
